@@ -59,6 +59,34 @@ def test_converts_down_right_angle():
     assert set(graph.edges()) == {("1", "2")}
 
 
+def test_converts_the_other_kind_down_right_angle():
+    graph = graph_from_ascii("""
+            1------|
+                   |
+                   2         """)
+
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
+def test_converts_up_right_angle():
+    graph = graph_from_ascii("""
+                2
+                |
+         1------|            """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
+def test_converts_the_other_kind_of_up_right_angle():
+    graph = graph_from_ascii("""
+                2
+                |
+         1-------            """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
 def test_converts_escaped_down_obtuse_angle():
     graph = graph_from_ascii("""
             1--------
@@ -68,9 +96,27 @@ def test_converts_escaped_down_obtuse_angle():
     assert set(graph.edges()) == {("1", "2")}
 
 
+def test_converts_the_other_type_of_escaped_down_obtuse_angle():
+    graph = graph_from_ascii("""
+            1-------\\
+                     \\
+                      2      """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
 def test_converts_down_acute_angle():
     graph = graph_from_ascii("""
                 1--------
+                       /
+                      2         """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
+def test_converts_the_other_kind_of_down_acute_angle():
+    graph = graph_from_ascii("""
+                1-------/
                        /
                       2         """)
     assert set(graph.nodes()) == {"1", "2"}
