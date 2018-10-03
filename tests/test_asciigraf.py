@@ -185,6 +185,26 @@ def test_converts_other_kind_of_down_acute_angle():
     assert set(graph.edges()) == {("1", "2")}
 
 
+@pytest.mark.skip
+def test_converts_up_right_angle():
+    graph = graph_from_ascii("""
+                2
+                |
+         1------|            """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
+@pytest.mark.skip
+def test_converts_the_other_kind_of_up_right_angle():
+    graph = graph_from_ascii("""
+                2
+                |
+         1-------            """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+
 def test_converts_meshed_network():
     graph = graph_from_ascii("""
           0----1-------2
