@@ -23,23 +23,7 @@ def graph_from_ascii(network_string):
     }
     EDGE_CHARS = {"\\", "-", "/", "|"}
     nodes = list(node_iter(network_string))
-
-    node_chars = OrderedDict()
-    line_labels = {}
-    line_label_char_positions = set()
-    for node_label, root_position in nodes:
-        node_label_char_positions = {
-            root_position + Point(offset, 0)
-            for offset, _ in enumerate(node_label)
-        }
-        if node_label.startswith("(") and node_label.endswith(")"):
-            label_value = node_label[1:-1]
-            line_labels[root_position] = label_value
-            line_label_char_positions |= node_label_char_positions
-        else:
-            node_chars.update(
-                (pos, node_label) for pos in node_label_char_positions
-            )
+    node_chars, line_labels, line_label_char_positions = find_nodes_and_labels(nodes)
 
     # First pass to put edge chars in the map
     edge_chars = OrderedDict(
@@ -48,32 +32,8 @@ def graph_from_ascii(network_string):
         if char in EDGE_CHARS or pos in line_label_char_positions
     )
 
-    # Second pass to correct vertical labels. This needs to be
-    # a correction so that the OrderedDict is correctly setup
-    for root_position, label in list(line_labels.items()):
-        is_vertical_label = any(
-            above in edge_chars and edge_chars[above] == '|'
-            for above in (
-                root_position + Point(i, -1)
-                for i, char in enumerate(label)
-            )
-        )
+    clean_labels_from_edge_char_map(edge_chars, line_labels)
 
-        if is_vertical_label:
-            for i in range(len(label) + 2):  # + 2 for the parentheses
-                pos = root_position + Point(i, 0)
-                above = pos + Point(0, -1)
-
-                try:
-                    if edge_chars[above] == '|':
-                        edge_chars[pos] = '|'
-                        del line_labels[root_position]
-                        line_labels[pos] = label
-                    else:
-                        del edge_chars[pos]
-                except KeyError:
-                    # pass
-                    del edge_chars[pos]
 
     edge_char_to_edge_map = {}
     edges = []
@@ -134,6 +94,62 @@ def graph_from_ascii(network_string):
         }
     )
     return ascii_graph
+
+
+
+
+def find_nodes_and_labels(nodes):
+    """ Finds all the nodes and labels in the diagram
+
+         node1-----(label1)-----node2
+    """
+    node_chars = OrderedDict()
+    line_labels = {}
+    line_label_char_positions = set()
+    for node_label, root_position in nodes:
+        node_label_char_positions = {
+            root_position + Point(offset, 0)
+            for offset, _ in enumerate(node_label)
+        }
+        if node_label.startswith("(") and node_label.endswith(")"):
+            label_value = node_label[1:-1]
+            line_labels[root_position] = label_value
+            line_label_char_positions |= node_label_char_positions
+        else:
+            node_chars.update(
+                (pos, node_label) for pos in node_label_char_positions
+            )
+
+    return node_chars, line_labels, line_label_char_positions
+
+
+def clean_labels_from_edge_char_map(edge_chars, line_labels):
+    # Second pass to correct vertical labels. This needs to be
+    # a correction so that the OrderedDict is correctly setup
+    for root_position, label in list(line_labels.items()):
+        is_vertical_label = any(
+            above in edge_chars and edge_chars[above] == '|'
+            for above in (
+                root_position + Point(i, -1)
+                for i, char in enumerate(label)
+            )
+        )
+
+        if is_vertical_label:
+            for i in range(len(label) + 2):  # + 2 for the parentheses
+                pos = root_position + Point(i, 0)
+                above = pos + Point(0, -1)
+
+                try:
+                    if edge_chars[above] == '|':
+                        edge_chars[pos] = '|'
+                        del line_labels[root_position]
+                        line_labels[pos] = label
+                    else:
+                        del edge_chars[pos]
+                except KeyError:
+                    # pass
+                    del edge_chars[pos]
 
 
 class Point(object):
