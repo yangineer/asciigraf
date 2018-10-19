@@ -10,30 +10,33 @@ import re
 
 import networkx
 
+from asciigraf.point import Point
+
+
+LEFT, RIGHT = Point(-1, 0), Point(1, 0)
+ABOVE, BELOW = Point(0, -1), Point(0, 1)
+TOP_LEFT, BOTTOM_RIGHT = Point(-1, -1), Point(1, 1)
+BOTTOM_LEFT, TOP_RIGHT = Point(1, -1), Point(-1, 1)
+
+
+EDGE_CHARS = {"\\", "-", "/", "|"}
+EDGE_CHAR_NEIGHBOURS = {  # first point in tuple is the point parsed first
+    "-":  [LEFT, RIGHT],
+    "\\": [TOP_LEFT, BOTTOM_RIGHT],
+    "/":  [BOTTOM_LEFT, TOP_RIGHT],
+    "|":  [ABOVE, BELOW]
+}
+
+ABUTTING = {
+    TOP_LEFT:   "\\",  ABOVE: "|",    TOP_RIGHT: "/",
+    LEFT:        "-",                     RIGHT: "-",
+    BOTTOM_LEFT: "/",  BELOW: "|", BOTTOM_RIGHT: "\\",
+}
 
 def graph_from_ascii(network_string):
     """ Produces a networkx graph, based on an ascii drawing
         of a network
     """
-
-    EDGE_CHAR_NEIGHBOURS = {  # first point in tuple is the point parsed first
-        "-":  [LEFT, RIGHT],
-        "\\": [TOP_LEFT, BOTTOM_RIGHT],
-        "/":  [BOTTOM_LEFT, TOP_RIGHT],
-        "|":  [ABOVE, BELOW]
-    }
-
-    ABUTTING = {
-        TOP_LEFT: "\\",
-        ABOVE: "|",
-        TOP_RIGHT: "/",
-        RIGHT: "-",
-        BOTTOM_RIGHT: "\\",
-        BELOW: "|",
-        BOTTOM_LEFT: "/",
-        LEFT: "-",
-    }
-
     nodes, labels = map_nodes_and_labels(network_string)
 
     edge_chars = map_edge_chars(network_string)
@@ -245,39 +248,6 @@ def map_text_chars_to_text(text_map):
     )
 
 
-class Point(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __add__(self, other):
-        return Point(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other):
-        return Point(self.x - other.x, self.y - other.y)
-
-    def __iter__(self):
-        for el in (self.x, self.y):
-            yield el
-
-    def __repr__(self):
-        return "Point({}, {})".format(self.x, self.y)
-
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self.x == other.x and
-                self.y == other.y
-                )
-
-    def __lt__(self, other):
-        return self.y < other.y or (
-            not self.y > other.y and
-            self.x < other.x
-        )
-
-    def __hash__(self):
-        return hash((self.__class__, self.x, self.y))
-
 
 def map_edge_chars(network_string):
     """ Map positions in the string to edge chars
@@ -335,10 +305,3 @@ def map_to_string(char_map, node_chars=None):
         string += label
         cursor.x += len(label)
     return string
-
-EDGE_CHARS = {"\\", "-", "/", "|"}
-
-LEFT, RIGHT = Point(-1, 0), Point(1, 0)
-ABOVE, BELOW = Point(0, -1), Point(0, 1)
-TOP_LEFT, BOTTOM_RIGHT = Point(-1, -1), Point(1, 1)
-BOTTOM_LEFT, TOP_RIGHT = Point(1, -1), Point(-1, 1)
