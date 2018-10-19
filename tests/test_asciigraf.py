@@ -198,6 +198,21 @@ def test_S_bend():
     assert set(graph.edges()) == {("0", "2")}
 
 
+def test_adjacent_edges():
+    graph = graph_from_ascii("""
+        a------b
+        c----------d
+    """)
+
+    assert set(graph.nodes()) == {
+        "a", "b", "c", "d"
+    }
+    assert set(graph.edges()) == {
+        ("a", "b"),
+        ("c", "d"),
+    }
+
+
 def test_some_more_node_names():
     graph = graph_from_ascii("""
           s---p----1---nx
@@ -306,21 +321,6 @@ def test_vertical_line_adjacent_labels():
 
     assert graph.get_edge_data("C", "B")["label"] == "Vertical"
     assert graph.get_edge_data("C", "B")["length"] == 3
-
-
-def test_adjacent_edges():
-    graph = graph_from_ascii("""
-        a------b
-        c----------d
-    """)
-
-    assert set(graph.nodes()) == {
-        "a", "b", "c", "d"
-    }
-    assert set(graph.edges()) == {
-        ("a", "b"),
-        ("c", "d"),
-    }
 
 
 def test_too_many_neighbours_triggers_bad_edge_exception(caplog):
