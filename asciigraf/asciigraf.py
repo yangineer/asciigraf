@@ -24,12 +24,6 @@ def graph_from_ascii(network_string):
     # need to sort it so the patched-in edge chars will be in order
     edge_chars = OrderedDict(sorted(edge_chars.items()))
 
-    # we want to process the edges from top->bottom, left->right
-    node_chars = OrderedDict(
-        (position, char)
-        for root_position, node in nodes.items()
-        for position, char in char_map(node, root_position).items()
-    )
     node_char_to_node = map_text_chars_to_text(nodes)
     label_char_to_label = map_text_chars_to_text(labels)
 
@@ -69,20 +63,12 @@ def graph_from_ascii(network_string):
 
     ascii_graph = networkx.OrderedGraph()
     ascii_graph.add_nodes_from(
-        (node, {"position": position})
-        for position, node in nodes.items()
+        (node, {"position": position}) for position, node in nodes.items()
     )
-    for edge in edges:
-        if len(edge['nodes']) > 2:
-            raise TooManyNodesOnEdge(edge)
-        elif len(edge['nodes']) < 2:
-            raise TooFewNodesOnEdge(edge)
-        else:
-            ascii_graph.add_edge(*edge['nodes'])
-    networkx.set_edge_attributes(ascii_graph, name="length", values={
-        tuple(edge["nodes"]): len(edge["points"])
-        for edge in edges if edge["nodes"]
-    })
+    ascii_graph.add_edges_from(
+        (*edge['nodes'], {"length": len(edge["points"])})
+        for edge in edges
+    )
     networkx.set_edge_attributes(
         ascii_graph, name="label",
         values={
@@ -92,23 +78,6 @@ def graph_from_ascii(network_string):
         }
     )
     return ascii_graph
-
-
-def map_edge_chars(network_string):
-    """ Map positions in the string to edge chars
-
-        e.g. map_edge_chars("  --|   ") -> {
-            Point(3,0): "-",
-            Point(4,0): "-",
-            Point(5,0): "|",
-        }
-    """
-    edge_chars = OrderedDict(
-        (pos, char)
-        for pos, char in char_iter(network_string)
-        if char in EDGE_CHARS
-    )
-    return edge_chars
 
 
 def map_nodes_and_labels(network_string):
@@ -250,12 +219,21 @@ class Point(object):
         return hash((self.__class__, self.x, self.y))
 
 
-def char_iter(network_string):
-    return (
+def map_edge_chars(network_string):
+    """ Map positions in the string to edge chars
+
+        e.g. map_edge_chars("  --|   ") -> {
+            Point(3,0): "-",
+            Point(4,0): "-",
+            Point(5,0): "|",
+        }
+    """
+    return OrderedDict(
         (Point(col, row), char)
         for row, line in enumerate(network_string.split("\n"))
         for col, char in enumerate(line)
-        )
+        if char in EDGE_CHARS
+    )
 
 
 def node_iter(network_string):
@@ -264,21 +242,10 @@ def node_iter(network_string):
             yield (match.group(0), Point(match.start(), row))
 
 
-class TooManyNodesOnEdge(Exception):
-    def __init__(self, edge):
-        super(TooManyNodesOnEdge, self).__init__(
-            'Too many nodes ({}) found on edge starting at {!r}'.format(
-                len(edge['nodes']), edge['points'][0]))
-
-
-class TooFewNodesOnEdge(Exception):
-    def __init__(self, edge):
-        super(TooFewNodesOnEdge, self).__init__(
-            'Too few nodes ({}) found on edge starting at {!r}'.format(
-                len(edge['nodes']), edge['points'][0]))
 
 
 def map_to_string(char_map, node_chars=None):
+    """ Redraws a char_map and node_char map """
     node_chars = node_chars or {}
     node_start_map = OrderedDict()
     for position, node_label in node_chars.items():
@@ -307,10 +274,9 @@ def map_to_string(char_map, node_chars=None):
         cursor.x += len(label)
     return string
 
-EDGE_CHAR_NEIGHBOURS = {  # first point in tuple is the point parsed first
-        "-":  [Point(-1, 0), Point(1, 0)],
-        "\\": [Point(-1, -1),  Point(1, 1)],
-        "/":  [Point(1, -1), Point(-1, 1)],
-        "|":  [Point(0, -1), Point(0, 1)]
-    }
 EDGE_CHARS = {"\\", "-", "/", "|"}
+
+LEFT, RIGHT = Point(-1, 0), Point(1, 0)
+ABOVE, BELOW = Point(0, -1), Point(0, 1)
+TOP_LEFT, BOTTOM_RIGHT = Point(-1, -1), Point(1, 1)
+BOTTOM_LEFT, TOP_RIGHT = Point(1, -1), Point(-1, 1)

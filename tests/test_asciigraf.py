@@ -12,8 +12,6 @@ from asciigraf import graph_from_ascii
 from asciigraf.asciigraf import (
     Point,
     node_iter,
-    TooManyNodesOnEdge,
-    TooFewNodesOnEdge,
 )
 
 
