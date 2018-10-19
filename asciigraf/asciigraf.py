@@ -24,6 +24,9 @@ def graph_from_ascii(network_string):
         "|":  [Point(0, -1), Point(0, 1)]
     }
     EDGE_CHARS = {"\\", "-", "/", "|"}
+
+    # get the nodes from network string
+
     nodes = list(node_iter(network_string))
 
     node_chars = OrderedDict()
