@@ -11,6 +11,7 @@ import pytest
 from asciigraf import graph_from_ascii
 from asciigraf.asciigraf import (
     node_iter,
+    InvalidEdgeError,
 )
 from asciigraf.point import Point
 
@@ -123,22 +124,33 @@ def test_converts_other_kind_of_down_acute_angle():
     assert set(graph.edges()) == {("1", "2")}
 
 
-@pytest.mark.skip
 def test_converts_up_right_angle():
     graph = graph_from_ascii("""
-                2
+                1
                 |
-         1------|            """)
+         2------|            """)
+    assert set(graph.nodes()) == {"1", "2"}
+    assert set(graph.edges()) == {("1", "2")}
+
+    assert graph.edge
+
+
+def test_converts_left_down_angle():
+    graph = graph_from_ascii("""
+           ---1
+           |
+           2
+
+    """)
     assert set(graph.nodes()) == {"1", "2"}
     assert set(graph.edges()) == {("1", "2")}
 
 
-@pytest.mark.skip
 def test_converts_the_other_kind_of_up_right_angle():
     graph = graph_from_ascii("""
-                2
-                |
-         1-------            """)
+   1
+   |
+2---            """)
     assert set(graph.nodes()) == {"1", "2"}
     assert set(graph.edges()) == {("1", "2")}
 
@@ -294,8 +306,23 @@ def test_vertical_line_adjacent_labels():
     assert graph.get_edge_data("C", "B")["length"] == 3
 
 
+def test_adjacent_edges():
+    graph = graph_from_ascii("""
+        a------b
+        c----------d
+    """)
+
+    assert set(graph.nodes()) == {
+        "a", "b", "c", "d"
+    }
+    assert set(graph.edges()) == {
+        ("a", "b"),
+        ("c", "d"),
+    }
+
+
 def test_too_many_neighbours_triggers_bad_edge_exception():
-    with pytest.raises(TooManyNodesOnEdge):
+    with pytest.raises(InvalidEdgeError) as e:
         graph_from_ascii("""
                1---------------3
                        |
@@ -303,5 +330,5 @@ def test_too_many_neighbours_triggers_bad_edge_exception():
 
 
 def test_missing_end_node_raises_missing_end_node_exception():
-    with pytest.raises(TooFewNodesOnEdge):
+    with pytest.raises(InvalidEdgeError) as e:
         graph_from_ascii('1---')
