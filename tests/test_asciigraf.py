@@ -11,8 +11,6 @@ import pytest
 from asciigraf import graph_from_ascii
 from asciigraf.asciigraf import (
     node_iter,
-    TooManyNodesOnEdge,
-    TooFewNodesOnEdge,
 )
 from asciigraf.point import Point
 

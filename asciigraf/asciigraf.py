@@ -82,20 +82,12 @@ def graph_from_ascii(network_string):
 
     ascii_graph = networkx.OrderedGraph()
     ascii_graph.add_nodes_from(
-        (node, {"position": position})
-        for position, node in nodes.items()
+        (node, {"position": position}) for position, node in nodes.items()
     )
-    for edge in edges:
-        if len(edge['nodes']) > 2:
-            raise TooManyNodesOnEdge(edge)
-        elif len(edge['nodes']) < 2:
-            raise TooFewNodesOnEdge(edge)
-        else:
-            ascii_graph.add_edge(*edge['nodes'])
-    networkx.set_edge_attributes(ascii_graph, name="length", values={
-        tuple(edge["nodes"]): len(edge["points"])
-        for edge in edges if edge["nodes"]
-    })
+    ascii_graph.add_edges_from(
+        (*edge['nodes'], {"length": len(edge["points"])})
+        for edge in edges
+    )
     networkx.set_edge_attributes(
         ascii_graph, name="label",
         values={
